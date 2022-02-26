@@ -3,6 +3,8 @@ from django.forms.models import model_to_dict
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from school_app import models
+from school_app import serializers
+from rest_framework import viewsets
 
 import json
 
@@ -46,38 +48,6 @@ def subject_detail(request, pk):
             return HttpResponse(status=204)
 
 # Teacher
-@csrf_exempt
-def list_teachers(request):
-    if request.method == "GET":
-        teachers = list(models.Teacher.objects.values())
-        return JsonResponse(teachers, safe=False, status=200)
-    elif request.method == "POST":
-        teacher = request.body
-        teacher_dict = json.loads(teacher)
-        new_teacher = models.Teacher(**teacher_dict)
-        new_teacher.save()
-        return JsonResponse(teacher_dict, status=200)
-    else:
-        return HttpResponseNotFound("No")
-
-
-@csrf_exempt
-def teacher_detail(request, pk):
-    teacher = False
-    try:
-        teacher = models.Teacher.objects.get(pk=pk)
-    except ObjectDoesNotExist:
-        return JsonResponse({"status": f"No teacher id {pk}"}, status=404)
-
-    if teacher:
-        if request.method == "GET":
-            return JsonResponse(model_to_dict(teacher))
-        elif request.method == "PUT":
-            new_teacher_body = request.body
-            new_teacher = json.loads(new_teacher_body)
-            teacher.__dict__.update(new_teacher)
-            teacher.save()
-            return JsonResponse(new_teacher, status=201)
-        elif request.method == "DELETE":
-            teacher.delete()
-            return HttpResponse(status=204)
+class TeacherViewset(viewsets.ModelViewSet):
+    serializer_class = serializers.TeacherSerializer
+    queryset = models.Teacher.objects.all()
